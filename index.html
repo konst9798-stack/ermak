@@ -65,6 +65,15 @@ body.menu .drawer{transform:none;visibility:visible}
 .qr{margin:0;justify-self:start;display:grid;gap:6px;justify-items:center}
 .qr img{width:200px;height:200px;border-radius:12px;background:#fff;border:1px solid var(--line)}
 .qr figcaption{font-size:.8rem;color:var(--ink-3)}
+.inst{display:grid;gap:14px}
+.inst h3{margin:0;display:flex;align-items:center;gap:10px;font-size:1.15rem}
+.inst h3 .os{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-size:.95rem}
+.inst ol{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:10px}
+.inst ol li{counter-increment:s;display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start}
+.inst ol li::before{content:counter(s);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);font-weight:700;font-size:.9rem}
+.inst .k{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:0 6px;font-weight:700;white-space:nowrap}
+.inst .tip{margin:0;background:var(--surface-2);border-left:4px solid var(--accent);border-radius:8px;padding:10px 12px;font-size:.95rem}
+.inst .done{margin:0;font-weight:700}
 @media (prefers-reduced-motion:reduce){.drawer,.scrim{transition:none}}
 .brand .sub{font-size:.8rem;color:var(--head-2);text-align:right;line-height:1.25}
 .search{position:relative}
@@ -249,6 +258,7 @@ footer.src{font-size:.8rem;color:var(--ink-3);border-top:1px solid var(--line);p
 <nav class="drawer" id="drawer" aria-label="Меню">
   <div class="dhead"><b>Ермак <i>·</i> неисправности</b><button class="iconbtn" id="dclose" aria-label="Закрыть меню">✕</button></div>
   <button class="mi" data-go="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-6h3v6h5V9.5"/></svg>Главная</button>
+  <button class="mi" data-go="install"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3M10.5 18.5h3"/></svg>Установка</button>
   <button class="mi" data-go="about"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Описание</button>
 </nav>
 
@@ -469,7 +479,7 @@ burger.onclick=()=>menu(true);
 document.getElementById('scrim').onclick=()=>menu(false);
 document.getElementById('dclose').onclick=()=>menu(false);
 drawer.addEventListener('click',e=>{const b=e.target.closest('.mi'); if(!b) return; menu(false);
-  if(b.dataset.go==='about'){ if(location.hash!=='#about'){pushed=true; location.hash='about'} }
+  if(b.dataset.go==='about'||b.dataset.go==='install'){ const g=b.dataset.go; if(location.hash!=='#'+g){pushed=true; location.hash=g} }
   else { qEl.value=''; cat='all'; if(!det.hidden) location.hash=''; setSec(secs[0][0]); }
 });
 function openAbout(){
@@ -485,10 +495,47 @@ function openAbout(){
   det.hidden=false; det.scrollTop=0; document.body.style.overflow='hidden';
   det.querySelector('#back').onclick=()=>{ if(pushed){pushed=false;history.back()} else location.hash=''; };
 }
+let deferredInstall=null;
+addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredInstall=e; const b=document.getElementById('instnow'); if(b) b.hidden=false; });
+function openInstall(){
+  cur=null;
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const installed=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  const android=`<div class="about inst"><h3><span class="os">A</span>Android</h3>
+    <button class="maxbtn" id="instnow" ${deferredInstall?'':'hidden'}>Установить сейчас</button>
+    <ol>
+      <li><span>Откройте ссылку в браузере <b>Chrome</b>. Если открыли из MAX, Telegram или WhatsApp, нажмите <span class="k">⋮</span> → <b>«Открыть в браузере»</b>.</span></li>
+      <li><span>Нажмите <span class="k">⋮</span> справа сверху.</span></li>
+      <li><span>Выберите <b>«Установить приложение»</b> или <b>«Добавить на главный экран»</b>.</span></li>
+      <li><span>Нажмите <b>«Установить»</b>. На рабочем столе появится значок «Ермак».</span></li>
+    </ol>
+    <p class="tip"><b>Значок не появился?</b> На Xiaomi, Redmi, POCO, Huawei, Honor: Настройки → Приложения → Chrome → Разрешения → включить <b>«Ярлыки на рабочем столе»</b>, затем повторить.</p>
+    <p class="tip"><b>Другой браузер:</b> Яндекс — <span class="k">⋮</span> → «Добавить ярлык». Samsung Internet — <span class="k">☰</span> → «Добавить страницу на» → «Главный экран».</p>
+  </div>`;
+  const ios=`<div class="about inst"><h3><span class="os">i</span>iPhone</h3>
+    <ol>
+      <li><span>Откройте ссылку в браузере <b>Safari</b>. Если открыли из мессенджера, сначала откройте её в Safari.</span></li>
+      <li><span>Нажмите кнопку <b>«Поделиться»</b> <span class="k">⬆︎</span> (квадрат со стрелкой). Если её не видно, нажмите <span class="k">•••</span> внизу, затем «Поделиться».</span></li>
+      <li><span>Прокрутите вниз и выберите <b>«На экран „Домой“»</b>.</span></li>
+      <li><span>Нажмите <b>«Добавить»</b> справа сверху. На экране появится значок «Ермак».</span></li>
+    </ol>
+  </div>`;
+  det.innerHTML=`<div class="dbar"><div class="wrap"><button class="iconbtn" id="back" aria-label="Назад">← <span>Назад</span></button><span class="where">Установка</span></div></div>
+  <div class="wrap dbody"><h2 id="dtitle">Установка</h2>
+  <div class="inst">
+    ${installed?'<p class="tip done">Приложение уже установлено на этом телефоне ✓</p>':''}
+    ${isIOS?ios+android:android+ios}
+    <p class="tip">После первого открытия с интернетом приложение работает и без сети.</p>
+  </div></div>`;
+  det.hidden=false; det.scrollTop=0; document.body.style.overflow='hidden';
+  det.querySelector('#back').onclick=()=>{ if(pushed){pushed=false;history.back()} else location.hash=''; };
+  const ib=det.querySelector('#instnow');
+  if(ib) ib.onclick=async()=>{ if(!deferredInstall) return; deferredInstall.prompt(); try{await deferredInstall.userChoice}catch(_){} deferredInstall=null; ib.hidden=true; };
+}
 const MAXURL='https://max.ru/u/f9LHodD0cOJ3scMLTeC8FvEb-hVIBxCX1T3sJ1dlQVdsRPUozis77SKlZoU';
 
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(menuOpen()) menu(false); else if(!vw.hidden) closeViewer(); else if(!det.hidden) location.hash=''; } });
-function route(){ const h=location.hash.slice(1); if(!vw.hidden) closeViewer(); if(h==='about') openAbout(); else if(h&&/^[a-z0-9_]+$/i.test(h)) openDetail(h); else closeDetail(); }
+function route(){ const h=location.hash.slice(1); if(!vw.hidden) closeViewer(); if(h==='about') openAbout(); else if(h==='install') openInstall(); else if(h&&/^[a-z0-9_]+$/i.test(h)) openDetail(h); else closeDetail(); }
 addEventListener('hashchange',route);
 
 renderSecs(); renderChips(); renderList(); route();
