@@ -1,4 +1,4 @@
-const CACHE='ermak-71ef15da', MEDIA='ermak-media';
+const CACHE='ermak-47ca5bad', MEDIA='ermak-media';
 const CORE=["./", "index.html", "manifest.webmanifest", "media.json", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-180.png", "img2/hero.webp"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE&&k!==MEDIA).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
